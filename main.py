@@ -7,6 +7,8 @@ import requests, json
 
 band = None
 app = Flask(__name__)
+musicians = {}
+instruments = {}
 
 
 def main(instrument_parameters):
@@ -38,7 +40,7 @@ def main(instrument_parameters):
                                         instrument_parameters[3])
 
         band.add_musician(musician)
-
+        print(musicians)
     else:
         raise ValueError("Missing required valid command parameter!")
 
@@ -93,8 +95,20 @@ def post_delete():
     return response, 200
 
 
+@app.route("/api/instruments", methods=['GET'])
+def get_all_instruments():
+    musician_emails = list(musicians.keys())
+    for item in range(len(musician_emails)):
+        musician = musicians[musician_emails[item]]
+        for instr in musician.get_instruments():
+            instruments.update({musician_emails[item]: f"{instr}"})
+    print(instruments)
+    return app.response_class(response=json.dumps(instruments), status=200, mimetype="application/json")
+
+
 if __name__ == "__main__":
     band = Band()
+    musicians = band.musicians
     app.run(debug=True)
     try:
         pass
