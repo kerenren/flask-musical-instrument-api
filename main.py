@@ -106,6 +106,16 @@ def get_all_instruments():
     return app.response_class(response=json.dumps(instruments), status=200, mimetype="application/json")
 
 
+@app.route("/api/instruments/<string:email>", methods=['GET'])
+def get_instruments_by_musician(email):
+    musician = musicians[email]
+    instr_obj = {}
+    for instr in musician.get_instruments():
+        instr_obj.update({f"{email}": f"{instr}"})
+    print(instr_obj)
+    return app.response_class(response=json.dumps(instr_obj), status=200, mimetype="application/json")
+
+
 if __name__ == "__main__":
     band = Band()
     musicians = band.musicians
