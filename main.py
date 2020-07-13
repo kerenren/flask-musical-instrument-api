@@ -97,6 +97,8 @@ def post_delete():
 
 @app.route("/api/instruments", methods=['GET'])
 def get_all_instruments():
+    if musicians == {}:
+        abort(404, "missing musician dict is empty")
     musician_emails = list(musicians.keys())
     for item in range(len(musician_emails)):
         musician = musicians[musician_emails[item]]
@@ -108,6 +110,8 @@ def get_all_instruments():
 
 @app.route("/api/instruments/<string:email>", methods=['GET'])
 def get_instruments_by_musician(email):
+    if musicians == {}:
+        abort(404, "missing musician dict is empty")
     musician = musicians[email]
     instr_obj = {}
     for instr in musician.get_instruments():
