@@ -1,0 +1,8 @@
+.idea
+.github
+venv
+/venv
+/venv/bin
+/venv/include
+/venv/lib
+/venv/pyvenv.cfg
