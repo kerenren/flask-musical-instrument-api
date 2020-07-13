@@ -40,3 +40,7 @@ class Band:
             band += "\n"
 
         return band
+
+    @property
+    def musicians(self):
+        return self._musicians

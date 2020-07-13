@@ -18,3 +18,12 @@ json format from postman
     "model":"Pro",
     "musician_email":"doe@mail.com"
 }
+
+**post delete json**
+{
+    "action": "RemoveInstrument",
+    "name" : "StringInstrument",
+    "manufacture":"Wittner",
+    "model":"Pro",
+    "musician_email":"doe@mail.com"
+}
