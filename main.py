@@ -2,7 +2,7 @@ from model.Band import Band
 from model.ElectricPiano import ElectricPiano
 from model.StringInstrument import StringInstrument
 from model.musician import Musician
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 import requests, json
 
 band = None
@@ -10,55 +10,28 @@ app = Flask(__name__)
 musicians = {}
 instruments = {}
 
-
-def main(instrument_parameters):
-    if not instrument_parameters or len(instrument_parameters) < 3:
-        raise ValueError("Missing required parameters!")
-
-    if instrument_parameters[0] == 'ElectricPiano':
-        electric_piano = ElectricPiano.from_string(instrument_parameters[0], instrument_parameters[1],
-                                                   instrument_parameters[2])
-        band.add_instrument(instrument_parameters[3], electric_piano)
-
-    elif instrument_parameters[0] == 'StringInstrument':
-        string_inst = StringInstrument.from_string(instrument_parameters[0], instrument_parameters[1],
-                                                   instrument_parameters[2])
-        band.add_instrument(instrument_parameters[3], string_inst)
-
-    elif instrument_parameters[0] == 'RemoveInstrument':
-        if len(instrument_parameters) < 4:
-            raise ValueError("Missing required delete parameters!")
-
-        band.remove_instrument(instrument_parameters[1], instrument_parameters[2],
-                               instrument_parameters[3], instrument_parameters[4])
-
-    elif instrument_parameters[0] == 'Musician':
-        if len(instrument_parameters) < 4:
-            raise ValueError("Missing required musician parameters!")
-
-        musician = Musician.from_string(instrument_parameters[1], instrument_parameters[2],
-                                        instrument_parameters[3])
-
-        band.add_musician(musician)
-        print(musicians)
-    else:
-        raise ValueError("Missing required valid command parameter!")
-
-
 @app.route('/api/musician', methods=['POST'])
 def post_musician():
     content = request.json
     if content is None or len(content) < 4:
-        return "Missing required parameters!", 404
+        return "Missing required parameters!", 404  # report error by return
     musician_parameters = [content["musician"], content["first_name"], content["last_name"],
                            content["email"]]
-    response = app.response_class(
-        response=json.dumps({"musician": content}),
-        status=200,
-        mimetype='application/json'
-    )
-    main(musician_parameters)
-    return response, 200
+    if musician_parameters[0].lower() == 'musician':
+        if len(musician_parameters) < 4:
+            abort(404, "Missing required musician parameters!")  # report error by abort
+        musician = Musician.from_string(musician_parameters[1], musician_parameters[2],
+                                        musician_parameters[3])
+        band.add_musician(musician)
+        print("musicians instance", str(musician))
+        response = app.response_class(
+            response=json.dumps({"musician_id": str(musician)}),
+            status=201,
+            mimetype='application/json'
+        )
+        return response
+    else:
+        abort(404, "Missing required valid command parameter!")
 
 
 # type,manufacturer,model, musician_email
@@ -67,15 +40,28 @@ def post_instrument():
     content = request.json
     if content is None or len(content) < 4:
         return "Missing required parameters!", 404
-    instrument_parameters = [content["type"], content["manufacture"], content["model"],
-                             content["musician_email"]]
-    response = app.response_class(
-        response=json.dumps({"instrument": content}),
-        status=200,
-        mimetype='application/json'
-    )
-    main(instrument_parameters)
-    return response, 200
+    instrument_parameters = [content["type"], content["manufacture"], content["model"], content["musician_email"]]
+    if instrument_parameters[0].lower().replace(" ", "") == 'electricpiano':
+        electric_piano = ElectricPiano.from_string(instrument_parameters[0], instrument_parameters[1],
+                                                   instrument_parameters[2])
+        band.add_instrument(instrument_parameters[3], electric_piano)
+
+        response = app.response_class(
+            response=json.dumps({"ElectricPiano": str(electric_piano)}),
+            status=201,
+            mimetype='application/json'
+        )
+        return response
+    elif instrument_parameters[0].lower().replace(" ", "") == 'stringinstrument':
+        string_inst = StringInstrument.from_string(instrument_parameters[0], instrument_parameters[1],
+                                                   instrument_parameters[2])
+        band.add_instrument(instrument_parameters[3], string_inst)
+        response = app.response_class(
+            response=json.dumps({"StringInstrument": str(string_inst)}),
+            status=201,
+            mimetype='application/json'
+        )
+        return response
 
 
 # RemoveInstrument,type,manufacturer,model, musician_email
@@ -86,13 +72,18 @@ def post_delete():
         abort(404)
     delete_parameters = [content["action"], content["name"], content["manufacture"], content["model"],
                          content["musician_email"]]
+    if len(delete_parameters) < 4:
+        abort(404, "Missing required delete parameters!")
+
+    band.remove_instrument(delete_parameters[1], delete_parameters[2],
+                           delete_parameters[3], delete_parameters[4])
+
     response = app.response_class(
         response=json.dumps({"delete": content}),
-        status=200,
+        status=201,
         mimetype="application/json"
     )
-    main(delete_parameters)
-    return response, 200
+    return response
 
 
 @app.route("/api/instruments", methods=['GET'])
