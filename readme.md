@@ -14,7 +14,7 @@ json format from postman
 **post instrument json**
 {
    "type" : "StringInstrument",
-    "manufacturer":"Wittner",
+    "manufacture":"Wittner",
     "model":"Pro",
     "musician_email":"doe@mail.com"
 }
