@@ -28,10 +28,11 @@ class Musician(Person):
         instruments = []
         return cls(first_name, last_name, email, instruments)
 
-    @property
-    def instruments(self):
-        return self._instruments
-
-# musician = Musician("joe","doe","email",instruments=["Musician: joe, instruments=guitar"])
+# musician = Musician("joe","doe","email",instruments=["guitar","piano"])
 # instr = musician.get_instruments()
-# print(musician._instruments)
+# # print(instr)
+# # print(musician.__str__())
+# print(musician._instruments.__str__())
+# for inst in musician._instruments:
+#     print(inst.__str__())
+#     # inst.__str__()

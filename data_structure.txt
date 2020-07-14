@@ -1,0 +1,28 @@
+Data structure:
+  Option 1: have a dictionary for the instruments
+  (key: instrument_id, value: instrument instance),
+  and a separate dictionary for the users
+  (key: user_id, value: user instance).
+
+  pro:
+  separating dictionary and instruments as two dictionaries make it easy to be:
+  1. Agile programming:  easy to maintain, adaptive planning, flexible to change
+  2. access friendly to each dictionaries separately
+  3. more readable for other programmers
+  cons:
+  more codes
+
+  Option 2: have one dictionary for both users and instruments
+  E.g. user dictionary with an entry for instruments for each user.
+
+  pro: easy to manage data per user, there is no need to generate entire separately
+  cons:
+  1. relatively hard to decode since the structure is more complicated;
+  2. hard to read what's exactly inside the dictionary for other programmers.
+
+  My reasons to choose option 1:
+  1. there are more practices for me to mutate data in dictionary,
+  2. get a chance to learn how to generate unique id string using: https://pynative.com/python-generate-random-string/
+  or using a counter as the entries for each dictionary
+
+
