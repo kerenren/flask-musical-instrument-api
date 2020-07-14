@@ -3,12 +3,52 @@ from model.ElectricPiano import ElectricPiano
 from model.StringInstrument import StringInstrument
 from model.musician import Musician
 from flask import Flask, request, abort, jsonify
-import requests, json
+import requests, json, string, random
 
 band = None
 app = Flask(__name__)
-musicians = {}
-instruments = {}
+musicians_dict = {}
+instruments_dict = {}
+
+
+def get_random_id(length):
+    letters = string.ascii_letters
+    numbers = list(range(10))
+    result_str = ''.join(random.choice(letters) for i in range(length)) + str(random.choice(numbers)) + (
+        random.choice(letters))
+    return result_str
+
+
+def extract_value(values_dic, search_string):
+    def check_string(value):
+        if search_string in value:
+            return value
+
+    for value in values_dic.values():
+        item_value = check_string(value)
+        if item_value:
+            print(item_value)
+            return item_value
+        # values_string = json.dumps(values)
+        # return searchFor in values_string
+        # def validate_string():
+        #     for value in values_dic.values():
+        #         if search_string in value:
+        #             print("yes")
+        #             return value
+        #         else:
+        #             print("Nope")
+        #             return False
+        # return validate_string()
+
+
+def update_objs_dict(dict_name, objs_dict, length, obj_instance):
+    obj_id = get_random_id(length)
+    obj_dict = {obj_id: str(obj_instance)}
+    objs_dict.update(obj_dict)
+    print(dict_name, "has been updated to:\n", objs_dict)
+    return obj_dict
+
 
 @app.route('/api/musician', methods=['POST'])
 def post_musician():
@@ -23,9 +63,9 @@ def post_musician():
         musician = Musician.from_string(musician_parameters[1], musician_parameters[2],
                                         musician_parameters[3])
         band.add_musician(musician)
-        print("musicians instance", str(musician))
+        musician_dict = update_objs_dict("musicians_dict", musicians_dict, 6, musician)
         response = app.response_class(
-            response=json.dumps({"musician_id": str(musician)}),
+            response=json.dumps(musician_dict),
             status=201,
             mimetype='application/json'
         )
@@ -34,20 +74,22 @@ def post_musician():
         abort(404, "Missing required valid command parameter!")
 
 
-# type,manufacturer,model, musician_email
+# add a new instrument to a musician
 @app.route("/api/instrument", methods=['POST'])
 def post_instrument():
     content = request.json
     if content is None or len(content) < 4:
         return "Missing required parameters!", 404
     instrument_parameters = [content["type"], content["manufacture"], content["model"], content["musician_email"]]
+    if extract_value(musicians_dict, instrument_parameters[3]) is None:
+        abort(404, "The musician doesn't exist")
     if instrument_parameters[0].lower().replace(" ", "") == 'electricpiano':
         electric_piano = ElectricPiano.from_string(instrument_parameters[0], instrument_parameters[1],
                                                    instrument_parameters[2])
         band.add_instrument(instrument_parameters[3], electric_piano)
-
+        instrument_dict = update_objs_dict("instruments_dict", instruments_dict, 4, electric_piano)
         response = app.response_class(
-            response=json.dumps({"ElectricPiano": str(electric_piano)}),
+            response=json.dumps(instrument_dict),
             status=201,
             mimetype='application/json'
         )
@@ -56,15 +98,16 @@ def post_instrument():
         string_inst = StringInstrument.from_string(instrument_parameters[0], instrument_parameters[1],
                                                    instrument_parameters[2])
         band.add_instrument(instrument_parameters[3], string_inst)
+        instrument_dict = update_objs_dict("instruments_dict", instruments_dict, 4, string_inst)
         response = app.response_class(
-            response=json.dumps({"StringInstrument": str(string_inst)}),
+            response=json.dumps(instrument_dict),
             status=201,
             mimetype='application/json'
         )
         return response
 
 
-# RemoveInstrument,type,manufacturer,model, musician_email
+# Delete an instrument by musician_email, name, manufacturer, model
 @app.route("/api/delete", methods=['POST'])
 def post_delete():
     content = request.json
@@ -86,27 +129,25 @@ def post_delete():
     return response
 
 
+# Get all instruments
 @app.route("/api/instruments", methods=['GET'])
 def get_all_instruments():
-    if musicians == {}:
-        abort(404, "missing musician dict is empty")
-    musician_emails = list(musicians.keys())
-    for item in range(len(musician_emails)):
-        musician = musicians[musician_emails[item]]
-        for instr in musician.get_instruments():
-            instruments.update({musician_emails[item]: f"{instr}"})
-    print(instruments)
-    return app.response_class(response=json.dumps(instruments), status=200, mimetype="application/json")
+    if instruments_dict == {}:
+        abort(404, "instruments_dict is empty")
+    return app.response_class(response=json.dumps(instruments_dict), status=200, mimetype="application/json")
 
 
+# Get all instruments by a specific musician’s email
 @app.route("/api/instruments/<string:email>", methods=['GET'])
 def get_instruments_by_musician(email):
-    if musicians == {}:
-        abort(404, "missing musician dict is empty")
+    if instruments_dict == {}:
+        abort(404, "instruments_dict is empty")
+    if extract_value(musicians_dict, email) is None:
+        abort(404, "the email is not documented")
     musician = musicians[email]
-    instr_obj = {}
+    instr_obj = []
     for instr in musician.get_instruments():
-        instr_obj.update({f"{email}": f"{instr}"})
+        instr_obj.append(instr.__str__())
     print(instr_obj)
     return app.response_class(response=json.dumps(instr_obj), status=200, mimetype="application/json")
 
